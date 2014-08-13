@@ -26,6 +26,9 @@ defmodule ScenarioBench.Mixfile do
   #
   # Type `mix help deps` for more examples and options
   defp deps do
-    []
+    [
+      # {:hound, "*", optional: true}
+      {:hound,   github: "HashNuke/hound"}
+    ]
   end
 end
