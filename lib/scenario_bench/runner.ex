@@ -110,14 +110,17 @@ defmodule ScenarioBench.Runner do
 
 
 
-  defp run_global_callbacks(action, all_callbacks) when is_atom(action) do
-    get_in all_callbacks, [action]
-    |> run_global_callbacks(nil)
+  defp run_global_callbacks(action, all_callbacks) do
+    get_in(all_callbacks, [action])
+    |> run_global_callback(nil)
   end
 
-  defp run_global_callbacks(_callbacks, :stop), do: :stop
+  defp run_global_callback(_callbacks, :stop), do: :stop
+  defp run_global_callback([], _status)
+  end
 
-  defp run_global_callbacks([callback | callbacks], _status) do
-    run_global_callbacks callbacks, apply(callback, [])
+
+  defp run_global_callback([callback | callbacks], _status) do
+    run_global_callback callbacks, apply(callback, [])
   end
 end
