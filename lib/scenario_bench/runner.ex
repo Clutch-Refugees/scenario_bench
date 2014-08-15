@@ -116,7 +116,7 @@ defmodule ScenarioBench.Runner do
   end
 
   defp run_global_callback(_callbacks, :stop), do: :stop
-  defp run_global_callback([], _status)
+  defp run_global_callback([], _status) do
   end
 
 
