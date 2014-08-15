@@ -1,4 +1,5 @@
 defmodule ScenarioBench.Runner do
+  import ScenarioBench.Utils
 
   def run_by_name(scenario_name, data, run_options) do
     {scenario_definition, scenario_options} = ScenarioBench.get_scenario(scenario_name)
@@ -9,7 +10,12 @@ defmodule ScenarioBench.Runner do
 
 
   def run(scenario, data, options) do
-    run(scenario, data, scenario, options, [])
+    case run_global_callbacks(:before_all, options.callbacks) do
+      :stop -> true
+      _ -> run(scenario, data, scenario, options, [])
+    end
+
+    run_global_callbacks(:after_all, options.callbacks)
   end
 
 
@@ -17,30 +23,41 @@ defmodule ScenarioBench.Runner do
   end
 
 
-  def run(scenario, data, [field | fields], options, tree) do
-    node_path = tree ++ [field[:name]]
-    case is_list(field[:type]) do
-      true ->
-        fill_group node_path, data, options, node_path
-      false ->
-        fill_field field, data, options, node_path
+  def run(scenario, data, [field | fields], options, traversal_path) do
+    traversal_path = traversal_path ++ [field[:name]]
+    extras = make_extras(traversal_path, data)
+
+    case run_callbacks_for_node(:before, node, options.callbacks, extras) do
+      :stop -> true
+      _ ->
+        case is_list(field[:type]) do
+          true ->
+            fill_group scenario, data, options, traversal_path
+          false ->
+            fill_field field, data, options, traversal_path
+        end
     end
 
-    run(scenario, data, fields, options, tree)
+
+    case run_callbacks_for_node(:after, node, options.callbacks, extras) do
+      :stop -> true
+      _ ->
+        run(scenario, data, fields, options, traversal_path)
+    end
   end
 
 
-  defp fill_group(scenario, data, options, node_path) do
-    field = get_in scenario, node_path
-    parent_node  = Enum.slice node_path, 0, length(node_path) - 1
-    current_leaf = List.last(node_path)
-    case get_value_of(node_path, data) do
+  defp fill_group(scenario, data, options, traversal_path) do
+    field = get_in scenario, traversal_path
+    parent  = Enum.slice traversal_path, 0, length(traversal_path) - 1
+    current_leaf = List.last(traversal_path)
+    case get_value_of(traversal_path, data) do
       nil -> true
       values when is_list(values) ->
         Enum.with_index(values)
         |> Enum.each(fn({_item, index})->
-             new_node_path = parent_node ++ {current_leaf, index}
-             run(scenario, data, field[:type], options, new_node_path)
+             new_traversal_path = parent ++ {current_leaf, index}
+             run(scenario, data, field[:type], options, new_traversal_path)
            end)
       _anything ->
         raise "Expected value for #{field[:name]} to be a list"
@@ -48,9 +65,8 @@ defmodule ScenarioBench.Runner do
   end
 
 
-  defp fill_field(field, data, _options, node_path) do
-    field_info = %{ node: node_path }
-    case get_value_of(node_path, data) do
+  defp fill_field(field, data, _options, traversal_path) do
+    case get_value_of(traversal_path, data) do
       nil   -> true
         IO.inspect "SKIP: #{field[:name]}"
       value ->
@@ -59,25 +75,25 @@ defmodule ScenarioBench.Runner do
   end
 
 
-  def get_value_of([], data), do: data
-  def get_value_of(fields, nil), do: nil
 
-
-  def get_value_of([path_item | path_items], data) when is_tuple(path_item) do
-    {leaf_name, index} = path_item
-    case get_in(data, [leaf_name]) do
-      nil ->
-        node_data_of_index = nil
-      node_data ->
-        node_data_of_index = Enum.fetch!(node_data, index)
-    end
-    get_value_of(path_items, node_data_of_index)
+  defp run_callbacks_for_node(action, node, callbacks, extras) do
+    node_callbacks = get_in(callbacks, [action, node]) || []
+    wildcard_callbacks = get_in( callbacks, [similar_callback_action(action)] ) || []
+    run_callbacks action, node, (wildcard_callbacks ++ node_callbacks), extras
   end
 
 
-  def get_value_of([path_item | path_items], data) do
-    node_data = get_in(data, [path_item])
-    get_value_of(path_items, node_data)
+  defp run_callbacks(_action, _node, [], _extras) do
+  end
+
+
+  defp run_callbacks(action, node, [callback | callbacks], extras) do
+    return_value = apply callback, [%{field: extras.field, data: extras.data, node: node}]
+    case return_value do
+      :stop -> :stop
+      _ ->
+        run_callbacks action, node, callbacks, extras
+    end
   end
 
 
@@ -95,5 +111,18 @@ defmodule ScenarioBench.Runner do
 
     all_callbacks = Map.merge stored_callbacks, injected_callbacks, resolver
     Map.put(options, :callbacks, all_callbacks)
+  end
+
+
+
+  defp run_global_callbacks(action, all_callbacks) when is_atom(action) do
+    get_in all_callbacks, [action]
+    |> run_global_callbacks(nil)
+  end
+
+  defp run_global_callbacks(_callbacks, :stop), do: :stop
+
+  defp run_global_callbacks([callback | callbacks], _status) do
+    run_global_callbacks callbacks, apply(callback, [])
   end
 end
