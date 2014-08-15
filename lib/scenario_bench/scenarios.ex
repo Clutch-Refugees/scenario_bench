@@ -7,15 +7,15 @@ defmodule ScenarioBench.Scenarios do
 
   def add(name, scenario_definition, options \\ %{}) do
     Agent.update(__MODULE__, fn(state)->
-      put_in state, [:scenarios, name], %{definition: scenario_definition, options: options}
       ScenarioBench.Callbacks.add_scenario(name)
+      put_in state, [:scenarios, name], %{definition: scenario_definition, options: options}
     end)
   end
 
 
   def get(name) do
-    Agent.get(__MODULE__, fn(state)->
+    Agent.get __MODULE__, fn(state)->
       get_in state, [:scenarios, name]
-    end)
+    end
   end
 end
