@@ -111,7 +111,7 @@ defmodule ScenarioBench.Runner do
 
 
   defp run_global_callbacks(action, all_callbacks) do
-    get_in(all_callbacks, [action])
+    ( get_in(all_callbacks, [action]) || [] )
     |> run_global_callback(nil)
   end
 
