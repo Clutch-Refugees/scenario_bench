@@ -23,7 +23,7 @@ defmodule ScenarioBench.Utils do
 
   def make_extras(traversal_path, data) do
     %{
-      field: get_field_name(List.last),
+      field: get_field_name(List.last traversal_path),
       node:  get_node(traversal_path),
       data:  data
     }
