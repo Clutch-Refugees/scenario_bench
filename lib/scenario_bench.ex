@@ -26,6 +26,7 @@ defmodule ScenarioBench do
 
   defdelegate add_callback(scenario, action, callback),            to: ScenarioBench.Callbacks, as: :add
   defdelegate add_callback(scenario, action, traversal, callback), to: ScenarioBench.Callbacks, as: :add
+
   defdelegate run(name, data, run_options),                        to: ScenarioBench.Runner,    as: :run_by_name
 
 end

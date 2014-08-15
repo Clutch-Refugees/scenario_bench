@@ -1,6 +1,8 @@
 defmodule ScenarioBench.Fillers do
   use Hound.Helpers
 
+  #TODO this is fictional
+
   def fill(:text, elementId, value, meta) do
     fill_field(elementId, value)
   end
