@@ -1,5 +1,13 @@
 defmodule ScenarioBench.Runner do
 
+  def run_by_name(scenario_name, data, run_options) do
+    {scenario_definition, scenario_options} = ScenarioBench.get_scenario(scenario_name)
+    options = Map.merge(scenario_options, run_options)
+    options_with_stored_callbacks = add_stored_callbacks(scenario_name, options)
+    ScenarioBench.Runner.run(scenario_definition, data, options_with_stored_callbacks)
+  end
+
+
   def run(scenario, data, options) do
     run(scenario, data, scenario, options, [])
   end
@@ -70,5 +78,22 @@ defmodule ScenarioBench.Runner do
   def get_value_of([path_item | path_items], data) do
     node_data = get_in(data, [path_item])
     get_value_of(path_items, node_data)
+  end
+
+
+  defp add_stored_callbacks(scenario_name, options) do
+    stored_callbacks   = ScenarioBench.Callbacks.get(scenario_name)
+    injected_callbacks = get_in(options, [:callbacks]) || %{}
+    wildcard_callback_actions = [:before_all, :after_all, :before_each, :after_each]
+
+    resolver = fn(callback_action_name, value1, value2)->
+      case Enum.member?(wildcard_callback_actions, callback_action_name) do
+        true  -> value1 ++ value2
+        false -> Map.merge( value1, value2, fn(_key, v1, v2)-> v1 ++ v2 end)
+      end
+    end
+
+    all_callbacks = Map.merge stored_callbacks, injected_callbacks, resolver
+    Map.put(options, :callbacks, all_callbacks)
   end
 end

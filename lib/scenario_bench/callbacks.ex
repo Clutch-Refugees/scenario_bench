@@ -33,4 +33,10 @@ defmodule ScenarioBench.Callbacks do
     end
   end
 
+
+  def get(scenario) do
+    Agent.get __MODULE__, fn(state)->
+      get_in state, [:scenarios, scenario]
+    end
+  end
 end
