@@ -4,7 +4,7 @@ defmodule ScenarioBench.Runner do
   def run_by_name(scenario_name, data, run_options) do
     {scenario_definition, scenario_options} = ScenarioBench.get_scenario(scenario_name)
     options = Map.merge(scenario_options, run_options)
-    options_with_stored_callbacks = add_stored_callbacks(scenario_name, options)
+    options_with_stored_callbacks = add_stored_callbacks_to_options(scenario_name, options)
     ScenarioBench.Runner.run(scenario_definition, data, options_with_stored_callbacks)
   end
 
@@ -31,18 +31,14 @@ defmodule ScenarioBench.Runner do
       :stop -> true
       _ ->
         case is_list(field[:type]) do
-          true ->
-            fill_group scenario, data, options, traversal_path
-          false ->
-            fill_field field, data, options, traversal_path
+          true  -> fill_group(scenario, data, options, traversal_path)
+          false -> fill_field(field, data, options, traversal_path)
         end
-    end
 
-
-    case run_callbacks_for_node(:after, node, options.callbacks, extras) do
-      :stop -> true
-      _ ->
-        run(scenario, data, fields, options, traversal_path)
+        case run_callbacks_for_node(:after, node, options.callbacks, extras) do
+          :stop -> true
+          _     -> run(scenario, data, fields, options, traversal_path)
+        end
     end
   end
 
@@ -91,13 +87,12 @@ defmodule ScenarioBench.Runner do
     return_value = apply callback, [%{field: extras.field, data: extras.data, node: node}]
     case return_value do
       :stop -> :stop
-      _ ->
-        run_callbacks action, node, callbacks, extras
+      _     -> run_callbacks(action, node, callbacks, extras)
     end
   end
 
 
-  defp add_stored_callbacks(scenario_name, options) do
+  defp add_stored_callbacks_to_options(scenario_name, options) do
     stored_callbacks   = ScenarioBench.Callbacks.get(scenario_name)
     injected_callbacks = get_in(options, [:callbacks]) || %{}
     wildcard_callback_actions = [:before_all, :after_all, :before_each, :after_each]
