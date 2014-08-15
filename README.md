@@ -1,10 +1,11 @@
 # ScenarioBench
 
-* Store scenarios
-* Store callbacks to run before and after fields
+Library to store test scenarios and run callbacks
 
-### Callbacks & injections
 
-* When callback returns :stop, stop running
-* Injections: inject callbacks as options passed to run function
+### Callbacks
 
+Two types of callbacks
+
+* Stored callbacks (common stuff that needs to be run everytime)
+* Injected callbacks, passed as options to `ScenarioBench.run/3`. They are specific only to that run of the scenario
