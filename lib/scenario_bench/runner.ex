@@ -2,7 +2,7 @@ defmodule ScenarioBench.Runner do
   import ScenarioBench.Utils
 
   def run_by_name(scenario_name, data, run_options) do
-    {scenario_definition, scenario_options} = ScenarioBench.get_scenario(scenario_name)
+    %{definition: scenario_definition, options: scenario_options} = ScenarioBench.get_scenario(scenario_name)
     options = Map.merge(scenario_options, run_options)
     options_with_stored_callbacks = add_stored_callbacks_to_options(scenario_name, options)
     ScenarioBench.Runner.run(scenario_definition, data, options_with_stored_callbacks)
