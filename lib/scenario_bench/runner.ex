@@ -31,7 +31,7 @@ defmodule ScenarioBench.Runner do
       :stop -> true
       _ ->
         case is_list(field[:type]) do
-          true  -> fill_group(scenario, data, options, traversal_path)
+          true  -> fill_group(scenario, field, data, options, traversal_path)
           false -> fill_field(field, data, options, traversal_path)
         end
 
@@ -43,18 +43,20 @@ defmodule ScenarioBench.Runner do
   end
 
 
-  defp fill_group(scenario, data, options, traversal_path) do
-    field = get_in scenario, traversal_path
+  defp fill_group(scenario, field, data, options, traversal_path) do
     parent  = Enum.slice traversal_path, 0, length(traversal_path) - 1
     current_leaf = List.last(traversal_path)
-    case get_value_of(traversal_path, data) do
-      nil -> true
-      values when is_list(values) ->
-        Enum.with_index(values)
+    value = get_value_of(traversal_path, data)
+    cond do
+      value == nil -> true
+      is_list(value) && field[:] ->
+        Enum.with_index(value)
         |> Enum.each(fn({_item, index})->
              new_traversal_path = parent ++ {current_leaf, index}
              run(scenario, data, field[:type], options, new_traversal_path)
            end)
+      is_list(value) ->
+        #TODO handle the case of a simple group
       _anything ->
         raise "Expected value for #{field[:name]} to be a list"
     end
