@@ -36,13 +36,12 @@ defmodule ScenarioBench.Utils do
   end
 
 
-  def get_field_name(arg1) do
-    case is_tuple(arg1) do
-      true ->
-        {field_name, _} = arg1
-      false ->
-        arg1
-    end
+  def get_field_name({field_name, _index}) do
+    field_name
+  end
+
+  def get_field_name(field_name) do
+    field_name
   end
 
 

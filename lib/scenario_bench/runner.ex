@@ -52,11 +52,11 @@ defmodule ScenarioBench.Runner do
       is_list(value) ->
         Enum.with_index(value)
         |> Enum.each(fn({_item, index})->
-             new_traversal_path = parent ++ {current_leaf, index}
+             new_traversal_path = parent ++ [{current_leaf, index}]
              run(scenario, data, field[:type], options, new_traversal_path)
            end)
       is_map(value) ->
-        run(scenario, data, field[:type], options, parent ++ current_leaf)
+        run(scenario, data, field[:type], options, parent ++ [current_leaf])
       true ->
         raise "Expected value for #{field[:name]} to be a list"
     end
