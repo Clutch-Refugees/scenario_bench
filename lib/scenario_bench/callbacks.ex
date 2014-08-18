@@ -14,7 +14,7 @@ defmodule ScenarioBench.Callbacks do
   def add(scenario, action, callback) do
     Agent.update __MODULE__, fn(state)->
       update_in state, [:scenarios, scenario, action], fn(callbacks)->
-        (callbacks || []) ++ callback
+        (callbacks || []) ++ [callback]
       end
     end
   end
@@ -26,7 +26,7 @@ defmodule ScenarioBench.Callbacks do
 
       update_in state, [:scenarios, scenario, action], fn(callbacks_for_nodes)->
         update_in (callbacks_for_nodes || %{}), [node_key], fn(callbacks_for_node)->
-          (callbacks_for_node || []) ++ callback
+          (callbacks_for_node || []) ++ [callback]
         end
       end
 
