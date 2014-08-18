@@ -1,5 +1,5 @@
 defmodule ScenarioBench.Utils do
-  def get_value_of([], data), do: data
+  def get_value_of([], data),    do: data
   def get_value_of(fields, nil), do: nil
 
 
@@ -16,6 +16,10 @@ defmodule ScenarioBench.Utils do
 
 
   def get_value_of([path_item | path_items], data) do
+    IO.inspect "Get value of"
+    IO.inspect path_item
+    IO.inspect path_items
+    IO.inspect data
     node_data = get_in(data, [path_item])
     get_value_of(path_items, node_data)
   end
