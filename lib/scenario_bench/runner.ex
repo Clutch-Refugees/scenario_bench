@@ -49,15 +49,15 @@ defmodule ScenarioBench.Runner do
     value = get_value_of(traversal_path, data)
     cond do
       value == nil -> true
-      is_list(value) && field[:] ->
+      is_list(value) ->
         Enum.with_index(value)
         |> Enum.each(fn({_item, index})->
              new_traversal_path = parent ++ {current_leaf, index}
              run(scenario, data, field[:type], options, new_traversal_path)
            end)
-      is_list(value) ->
-        #TODO handle the case of a simple group
-      _anything ->
+      is_map(value) ->
+        run(scenario, data, field[:type], options, parent ++ current_leaf)
+      true ->
         raise "Expected value for #{field[:name]} to be a list"
     end
   end
