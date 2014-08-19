@@ -16,7 +16,10 @@ defmodule ScenarioBench.Utils do
 
 
   def get_value_of([path_item | path_items], data) do
-    node_data = get_in(data, [path_item])
+    node_data = case is_map(data) do
+                  true  -> get_in(data, [path_item])
+                  false -> data
+                end
     get_value_of(path_items, node_data)
   end
 
