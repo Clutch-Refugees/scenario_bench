@@ -34,7 +34,9 @@ defmodule ScenarioBench.Utils do
 
 
   def get_node(traversal_path) do
-    Enum.reduce traversal_path, [], &( &2 ++ [get_field_name(&1)] )
+    Enum.reduce(traversal_path, [], fn(item, path_items)->
+      path_items ++ [get_field_name(item)]
+    end)
     |> Enum.join(".")
   end
 
