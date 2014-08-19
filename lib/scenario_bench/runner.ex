@@ -1,4 +1,5 @@
 defmodule ScenarioBench.Runner do
+  require Logger
   import ScenarioBench.Utils
 
   def run_by_name(scenario_name, data, run_options) do
