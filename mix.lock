@@ -1,4 +1,0 @@
-%{"hound": {:git, "git://github.com/HashNuke/Hound.git", "3b16b4f54ddb482b6e1dd72e9d848324dc5f240c", []},
-  "ibrowse": {:git, "git://github.com/cmullaparthi/ibrowse.git", "d2e369ff42666c3574b8b7ec26f69027895c4d94", [tag: "v4.1.1"]},
-  "jsex": {:package, "2.0.0"},
-  "jsx": {:package, "2.0.4"}}

@@ -12,7 +12,7 @@ defmodule ScenarioBench.Mixfile do
   #
   # Type `mix help compile.app` for more information
   def application do
-    [applications: [:logger, :hound],
+    [applications: [:logger],
      mod: {ScenarioBench, []}]
   end
 
@@ -26,8 +26,6 @@ defmodule ScenarioBench.Mixfile do
   #
   # Type `mix help deps` for more examples and options
   defp deps do
-    [
-      {:hound, github: "HashNuke/Hound"}
-    ]
+    []
   end
 end
