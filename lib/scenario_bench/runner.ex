@@ -67,10 +67,9 @@ defmodule ScenarioBench.Runner do
   defp fill_field(field, data, _options, traversal_path) do
     case get_value_of(traversal_path, data) do
       nil   -> true
-        IO.inspect "SKIP: #{field[:name]} of type #{field[:type]}"
       value ->
-        IO.inspect "FILL: #{field[:name]} of type #{field[:type]}"
-        IO.inspect value
+        Logger.debug "FILL: #{field[:name]} of type #{field[:type]}"
+        apply options[:filler], :fill, [traversal_path, field[:type], data]
     end
   end
 
