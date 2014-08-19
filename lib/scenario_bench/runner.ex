@@ -26,7 +26,7 @@ defmodule ScenarioBench.Runner do
 
   def run(scenario, data, [field | fields], options, traversal_path) do
     new_traversal_path = traversal_path ++ [field[:name]]
-    extras = make_extras(traversal_path, data)
+    extras = make_extras(new_traversal_path, data)
 
     node_key = get_node(traversal_path)
     case run_callbacks_for_node(:before, node_key, options.callbacks, extras) do
@@ -34,8 +34,7 @@ defmodule ScenarioBench.Runner do
       _ ->
         case is_list(field[:type]) do
           true  -> fill_group(scenario, field, data, options, new_traversal_path)
-          false ->
-            fill_field(field, data, options, new_traversal_path)
+          false -> fill_field(field, data, options, new_traversal_path)
         end
 
         case run_callbacks_for_node(:after, node_key, options.callbacks, extras) do
