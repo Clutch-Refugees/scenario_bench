@@ -28,7 +28,8 @@ defmodule ScenarioBench.Runner do
     new_traversal_path = traversal_path ++ [field[:name]]
     extras = make_extras(traversal_path, data)
 
-    case run_callbacks_for_node(:before, node, options.callbacks, extras) do
+    node_key = get_node(traversal_path)
+    case run_callbacks_for_node(:before, node_key, options.callbacks, extras) do
       :stop -> true
       _ ->
         case is_list(field[:type]) do
@@ -37,7 +38,7 @@ defmodule ScenarioBench.Runner do
             fill_field(field, data, options, new_traversal_path)
         end
 
-        case run_callbacks_for_node(:after, node, options.callbacks, extras) do
+        case run_callbacks_for_node(:after, node_key, options.callbacks, extras) do
           :stop -> true
           _     -> run(scenario, data, fields, options, traversal_path)
         end
@@ -76,8 +77,8 @@ defmodule ScenarioBench.Runner do
 
 
 
-  defp run_callbacks_for_node(action, node, callbacks, extras) do
-    node_callbacks = get_in(callbacks, [action, node]) || []
+  defp run_callbacks_for_node(action, node_key, callbacks, extras) do
+    node_callbacks = get_in(callbacks, [action, node_key]) || []
     wildcard_callbacks = get_in( callbacks, [similar_callback_action(action)] ) || []
     run_callbacks action, node, (wildcard_callbacks ++ node_callbacks), extras
   end

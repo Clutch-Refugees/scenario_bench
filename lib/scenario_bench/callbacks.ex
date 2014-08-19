@@ -20,10 +20,8 @@ defmodule ScenarioBench.Callbacks do
   end
 
 
-  def add(scenario, action, traversal, callback) do
+  def add(scenario, action, node_key, callback) do
     Agent.update __MODULE__, fn(state)->
-      node_key = Enum.join(traversal, ".")
-
       update_in state, [:scenarios, scenario, action], fn(callbacks_for_nodes)->
         update_in (callbacks_for_nodes || %{}), [node_key], fn(callbacks_for_node)->
           (callbacks_for_node || []) ++ [callback]
