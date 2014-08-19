@@ -19,20 +19,21 @@ defmodule ScenarioBench.Runner do
   end
 
 
-  def run(_scenario, _data, [], _options, _tree) do
+  def run(_scenario, _data, [], _options, _traversal_path) do
   end
 
 
   def run(scenario, data, [field | fields], options, traversal_path) do
-    traversal_path = traversal_path ++ [field[:name]]
+    new_traversal_path = traversal_path ++ [field[:name]]
     extras = make_extras(traversal_path, data)
 
     case run_callbacks_for_node(:before, node, options.callbacks, extras) do
       :stop -> true
       _ ->
         case is_list(field[:type]) do
-          true  -> fill_group(scenario, field, data, options, traversal_path)
-          false -> fill_field(field, data, options, traversal_path)
+          true  -> fill_group(scenario, field, data, options, new_traversal_path)
+          false ->
+            fill_field(field, data, options, new_traversal_path)
         end
 
         case run_callbacks_for_node(:after, node, options.callbacks, extras) do
@@ -68,7 +69,8 @@ defmodule ScenarioBench.Runner do
       nil   -> true
         IO.inspect "SKIP: #{field[:name]} of type #{field[:type]}"
       value ->
-        IO.inspect "FILL: #{field[:name]} of type #{field[:type]} with #{value}"
+        IO.inspect "FILL: #{field[:name]} of type #{field[:type]}"
+        IO.inspect value
     end
   end
 
