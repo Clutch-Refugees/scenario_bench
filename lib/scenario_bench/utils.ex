@@ -1,6 +1,6 @@
 defmodule ScenarioBench.Utils do
   def get_value_of([], data),    do: data
-  def get_value_of(fields, nil), do: nil
+  def get_value_of(_fields, nil), do: nil
 
 
   def get_value_of([path_item | path_items], data) when is_tuple(path_item) do

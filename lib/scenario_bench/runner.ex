@@ -65,12 +65,12 @@ defmodule ScenarioBench.Runner do
   end
 
 
-  defp fill_field(field, data, _options, traversal_path) do
+  defp fill_field(field, data, options, traversal_path) do
     case get_value_of(traversal_path, data) do
       nil   -> true
       value ->
         Logger.debug "FILL: #{field[:name]} of type #{field[:type]}"
-        apply options[:filler], :fill, [traversal_path, field[:type], data]
+        apply options[:filler], :fill, [traversal_path, field[:type], value]
     end
   end
 
