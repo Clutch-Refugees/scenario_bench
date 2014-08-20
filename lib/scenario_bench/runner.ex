@@ -79,7 +79,7 @@ defmodule ScenarioBench.Runner do
   defp run_callbacks_for_node(action, node_key, callbacks, extras) do
     node_callbacks = get_in(callbacks, [action, node_key]) || []
     wildcard_callbacks = get_in( callbacks, [similar_callback_action(action)] ) || []
-    run_callbacks action, node, (wildcard_callbacks ++ node_callbacks), extras
+    run_callbacks action, node_key, (wildcard_callbacks ++ node_callbacks), extras
   end
 
 
