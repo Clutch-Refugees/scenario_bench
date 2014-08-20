@@ -83,15 +83,15 @@ defmodule ScenarioBench.Runner do
   end
 
 
-  defp run_callbacks(_action, _node, [], _extras) do
+  defp run_callbacks(_action, _node_key, [], _extras) do
   end
 
 
-  defp run_callbacks(action, node, [callback | callbacks], extras) do
-    return_value = apply callback, [%{field: extras.field, data: extras.data, node: node}]
+  defp run_callbacks(action, node_key, [callback | callbacks], extras) do
+    return_value = apply callback, [%{field: extras.field, data: extras.data, node: node_key}]
     case return_value do
       :stop -> :stop
-      _     -> run_callbacks(action, node, callbacks, extras)
+      _     -> run_callbacks(action, node_key, callbacks, extras)
     end
   end
 
