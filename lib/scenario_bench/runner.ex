@@ -28,7 +28,7 @@ defmodule ScenarioBench.Runner do
     new_traversal_path = traversal_path ++ [field[:name]]
     extras = make_extras(new_traversal_path, data)
 
-    node_key = get_node(traversal_path)
+    node_key = get_node(new_traversal_path)
     case run_callbacks_for_node(:before, node_key, options.callbacks, extras) do
       :stop -> true
       _ ->
