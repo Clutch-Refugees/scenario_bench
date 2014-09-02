@@ -99,6 +99,7 @@ defmodule ScenarioBench.Runner do
   defp add_stored_callbacks_to_options(scenario_name, options) do
     stored_callbacks   = ScenarioBench.Callbacks.get(scenario_name)
     injected_callbacks = get_in(options, [:callbacks]) || %{}
+    injected_prepend_callbacks = get_in(options, [:prepend_callbacks]) || %{}
     wildcard_callback_actions = [:before_all, :after_all, :before_each, :after_each]
 
     resolver = fn(callback_action_name, value1, value2)->
@@ -108,10 +109,19 @@ defmodule ScenarioBench.Runner do
       end
     end
 
-    all_callbacks = Map.merge stored_callbacks, injected_callbacks, resolver
+
+    prepend_resolver = fn(callback_action_name, value1, value2)->
+      case Enum.member?(wildcard_callback_actions, callback_action_name) do
+        true  -> value2 ++ value1
+        false -> Map.merge( value1, value2, fn(_key, v1, v2)-> v2 ++ v1 end)
+      end
+    end
+
+
+    all_callbacks = Map.merge(stored_callbacks, injected_callbacks, resolver)
+    |> Map.merge(injected_prepend_callbacks, prepend_resolver)
     Map.put(options, :callbacks, all_callbacks)
   end
-
 
 
   defp run_global_callbacks(action, all_callbacks) do
