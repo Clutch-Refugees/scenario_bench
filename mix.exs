@@ -4,7 +4,7 @@ defmodule ScenarioBench.Mixfile do
   def project do
     [app: :scenario_bench,
      version: "0.0.1",
-     elixir: "~> 0.15.1",
+     elixir: "~> 1.0.2",
      deps: deps]
   end
 
