@@ -28,8 +28,8 @@ defmodule ScenarioBench.Runner do
     end
 
     case index do
-      :stop -> :stop
-      nil   -> false
+      nil -> false
+      _   -> :stop
     end
   end
 
@@ -106,8 +106,8 @@ defmodule ScenarioBench.Runner do
     end
 
     case index do
-      :stop -> :stop
-      nil   -> false
+      nil -> false
+      _   -> :stop
     end
   end
 
