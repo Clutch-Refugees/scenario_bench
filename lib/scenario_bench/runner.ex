@@ -6,17 +6,15 @@ defmodule ScenarioBench.Runner do
     %{definition: scenario_definition, options: scenario_options} = ScenarioBench.get_scenario(scenario_name)
     options = Map.merge(scenario_options, run_options)
     options_with_stored_callbacks = add_stored_callbacks_to_options(scenario_name, options)
-    ScenarioBench.Runner.run(scenario_definition, data, options_with_stored_callbacks)
+    run(scenario_definition, data, options_with_stored_callbacks)
   end
 
 
   def run(scenario, data, options) do
-    case run_global_callbacks(:before_all, options.callbacks) do
-      :stop -> true
-      _ -> run(scenario, data, scenario, options, [])
+    unless run_global_callbacks(:before_all, options.callbacks) == :stop do
+      run(scenario, data, scenario, options, [])
+      run_global_callbacks(:after_all, options.callbacks)
     end
-
-    run_global_callbacks(:after_all, options.callbacks)
   end
 
 
@@ -27,20 +25,23 @@ defmodule ScenarioBench.Runner do
   def run(scenario, data, [field | fields], options, traversal_path) do
     new_traversal_path = traversal_path ++ [field[:name]]
     extras = make_extras(new_traversal_path, data)
-
     node_key = get_node(new_traversal_path)
-    case run_callbacks_for_node(:before, node_key, options.callbacks, extras) do
-      :stop -> true
-      _ ->
-        case is_list(field[:type]) do
-          true  -> fill_group(scenario, field, data, options, new_traversal_path)
-          false -> fill_field(field, data, options, new_traversal_path)
-        end
 
-        case run_callbacks_for_node(:after, node_key, options.callbacks, extras) do
-          :stop -> true
-          _     -> run(scenario, data, fields, options, traversal_path)
-        end
+    unless run_callbacks_for_node(:before, node_key, options.callbacks, extras) == :stop do
+      fill(scenario, field, data, options, new_traversal_path)
+
+      unless run_callbacks_for_node(:after, node_key, options.callbacks, extras) == :stop do
+        run(scenario, data, fields, options, traversal_path)
+      end
+    end
+  end
+
+
+  defp fill(scenario, field, data, options, new_traversal_path) do
+    if is_list(field[:type]) do
+      fill_group(scenario, field, data, options, new_traversal_path)
+    else
+      fill_field(field, data, options, new_traversal_path)
     end
   end
 
@@ -54,9 +55,9 @@ defmodule ScenarioBench.Runner do
       is_list(value) ->
         Enum.with_index(value)
         |> Enum.each(fn({_item, index})->
-             new_traversal_path = parent ++ [{current_leaf, index}]
-             run(scenario, data, field[:type], options, new_traversal_path)
-           end)
+          new_traversal_path = parent ++ [{current_leaf, index}]
+          run(scenario, data, field[:type], options, new_traversal_path)
+        end)
       is_map(value) ->
         run(scenario, data, field[:type], options, parent ++ [current_leaf])
       true ->
@@ -66,11 +67,10 @@ defmodule ScenarioBench.Runner do
 
 
   defp fill_field(field, data, options, traversal_path) do
-    case get_value_of(traversal_path, data) do
-      nil   -> true
-      value ->
-        Logger.debug "FILL: #{field[:name]} of type #{field[:type]}"
-        apply options[:filler], :fill, [traversal_path, field[:type], value]
+    value = get_value_of(traversal_path, data)
+    unless value == nil do
+      Logger.debug "FILL: #{field[:name]} of type #{field[:type]}"
+      apply options[:filler], :fill, [traversal_path, field[:type], value]
     end
   end
 
@@ -89,9 +89,9 @@ defmodule ScenarioBench.Runner do
 
   defp run_callbacks(action, node_key, [callback | callbacks], extras) do
     return_value = apply callback, [%{field: extras.field, data: extras.data, node: node_key}]
-    case return_value do
-      :stop -> :stop
-      _     -> run_callbacks(action, node_key, callbacks, extras)
+
+    unless return_value == :stop do
+      run_callbacks(action, node_key, callbacks, extras)
     end
   end
 
@@ -103,23 +103,26 @@ defmodule ScenarioBench.Runner do
     wildcard_callback_actions = [:before_all, :after_all, :before_each, :after_each]
 
     resolver = fn(callback_action_name, value1, value2)->
-      case Enum.member?(wildcard_callback_actions, callback_action_name) do
-        true  -> value1 ++ value2
-        false -> Map.merge( value1, value2, fn(_key, v1, v2)-> v1 ++ v2 end)
+      if Enum.member?(wildcard_callback_actions, callback_action_name) do
+        value1 ++ value2
+      else
+        Map.merge( value1, value2, fn(_key, v1, v2)-> v1 ++ v2 end)
       end
     end
 
 
     prepend_resolver = fn(callback_action_name, value1, value2)->
-      case Enum.member?(wildcard_callback_actions, callback_action_name) do
-        true  -> value2 ++ value1
-        false -> Map.merge( value1, value2, fn(_key, v1, v2)-> v2 ++ v1 end)
+      if Enum.member?(wildcard_callback_actions, callback_action_name) do
+        value2 ++ value1
+      else
+        Map.merge( value1, value2, fn(_key, v1, v2)-> v2 ++ v1 end)
       end
     end
 
 
     all_callbacks = Map.merge(stored_callbacks, injected_callbacks, resolver)
     |> Map.merge(injected_prepend_callbacks, prepend_resolver)
+
     Map.put(options, :callbacks, all_callbacks)
   end
 
@@ -128,6 +131,7 @@ defmodule ScenarioBench.Runner do
     ( get_in(all_callbacks, [action]) || [] )
     |> run_global_callback(nil)
   end
+
 
   defp run_global_callback(_callbacks, :stop), do: :stop
   defp run_global_callback([], _status) do
