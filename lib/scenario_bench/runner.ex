@@ -99,11 +99,15 @@ defmodule ScenarioBench.Runner do
   end
 
 
-  defp run_callbacks(action, node_key, [callback | callbacks], extras) do
-    return_value = apply callback, [%{field: extras.field, data: extras.data, node: node_key}]
+  defp run_callbacks(action, node_key, callbacks, extras) do
+    index = Enum.find_index callbacks, fn(callback)->
+      return_value = apply callback, [%{field: extras.field, data: extras.data, node: node_key}]
+      return_value == :stop
+    end
 
-    unless return_value == :stop do
-      run_callbacks(action, node_key, callbacks, extras)
+    case index do
+      :stop -> :stop
+      nil   -> false
     end
   end
 
