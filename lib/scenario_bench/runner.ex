@@ -22,16 +22,27 @@ defmodule ScenarioBench.Runner do
   end
 
 
-  def run(scenario, data, [field | fields], options, traversal_path) do
+  def run(scenario, data, fields, options, traversal_path) when is_list(fields) do
+    index = Enum.find_index fields, fn(field)->
+      run(scenario, data, field, options, traversal_path) == :stop
+    end
+
+    case index do
+      :stop -> :stop
+      nil   -> false
+    end
+  end
+
+
+  def run(scenario, data, field, options, traversal_path) do
     new_traversal_path = traversal_path ++ [field[:name]]
     extras = make_extras(new_traversal_path, data)
     node_key = get_node(new_traversal_path)
 
     unless run_callbacks_for_node(:before, node_key, options.callbacks, extras) == :stop do
-      fill(scenario, field, data, options, new_traversal_path)
-
-      unless run_callbacks_for_node(:after, node_key, options.callbacks, extras) == :stop do
-        run(scenario, data, fields, options, traversal_path)
+      unless fill(scenario, field, data, options, new_traversal_path) == :stop do
+        val = run_callbacks_for_node(:after, node_key, options.callbacks, extras)
+        val
       end
     end
   end
