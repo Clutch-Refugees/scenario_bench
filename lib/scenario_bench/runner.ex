@@ -42,6 +42,7 @@ defmodule ScenarioBench.Runner do
     unless run_callbacks_for_node(:before, node_key, options.callbacks, extras) == :stop do
       unless fill(scenario, field, data, options, new_traversal_path) == :stop do
         val = run_callbacks_for_node(:after, node_key, options.callbacks, extras)
+        IO.inspect "AFTER CALLBACK #{inspect val}"
         val
       end
     end
